@@ -1,5 +1,5 @@
 from copy import deepcopy
-
+import mani_skill2.envs
 from setup import AttrDict, parse_arguments, set_seed, set_device, setup_logger
 from algorithms.repo import Dreamer, MultitaskDreamer, RePo, MultitaskRePo, TIA
 from environments import make_env, make_multitask_env
@@ -78,7 +78,7 @@ def get_config():
 
 if __name__ == "__main__":
     config = get_config()
-    set_seed(config.seed)
+    set_seed(config.seed)#random numpy torch
     set_device(config.use_gpu, config.gpu_id)
 
     # Logger

@@ -12,11 +12,16 @@ def set_gpu_mode(mode, gpu_id=0):
     global _USE_GPU
     global _DEVICE
     _GPU_ID = gpu_id
-    _USE_GPU = mode
-    _DEVICE = torch.device(("cuda:" + str(_GPU_ID)) if _USE_GPU else "cpu")
-    torch.set_default_tensor_type(
-        torch.cuda.FloatTensor if _USE_GPU else torch.FloatTensor
-    )
+    _USE_GPU = bool(mode)
+    if _USE_GPU:
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA is not available but use_gpu=True.")
+        torch.cuda.set_device(_GPU_ID)
+        _DEVICE = torch.device(f"cuda:{_GPU_ID}")
+        torch.set_default_tensor_type(torch.cuda.FloatTensor)
+    else:
+        _DEVICE = torch.device("cpu")
+        torch.set_default_tensor_type(torch.FloatTensor)
 
 
 def get_device():

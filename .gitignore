@@ -35,4 +35,6 @@ MANIFEST
 logdir/
 wandb/
 data/
+env/
+data_zip/
 

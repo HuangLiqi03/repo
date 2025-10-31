@@ -9,7 +9,7 @@ import random
 import sys
 import torch
 import wandb
-
+os.environ["WANDB_MODE"] = "offline"
 sys.path.append(".")
 os.environ["WANDB_START_METHOD"] = "thread"
 

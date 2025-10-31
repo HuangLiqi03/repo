@@ -333,11 +333,11 @@ class ManiSkillWrapper(gym.Wrapper):
         super().__init__(env)
         assert env.obs_mode == "rgbd"
         self._pixel_obs = pixel_obs
-        if pixel_obs:
+        if pixel_obs:#若为像素观测，声明 3×64×64 的图像张量空间。
             self._observation_space = Box(
                 low=0, high=255, shape=(3, 64, 64), dtype=np.uint8
             )
-        else:
+        else:#否则将原环境中 agent、extra 两类状态空间展开并拼接成一维向量，作为新的 Box 空间。
             # States include robot proprioception (agent) and task information (extra)
             obs_space = self.env.observation_space
             state_spaces = []

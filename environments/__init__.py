@@ -3,7 +3,7 @@ import sys
 from functools import partial
 
 sys.path.append("./environments")
-
+from . import maniskill
 from .mt_env import MultitaskEnv, MultitaskVecEnv
 from .vec_env import AsyncVecEnv
 from .wrappers import (
@@ -81,14 +81,19 @@ def make_env(env_id, seed, pixel_obs=False):
             total_frames=1000,
         )
     elif suite == "maniskill":
-        import mani_skill2.envs
+        import mani_skill2.envs #注册PickCube等maniskill里才有的环境
         from maniskill import camera_poses, env_kwargs
         from .maniskill import ManiSkillWrapper
 
         pose = camera_poses[task]
         kwargs = env_kwargs[task]
+        # print(f"{task}-v0")
+        import gym
+        for spec in gym.envs.registry.all():
+            if "Matterport" in spec.id:
+                print(spec.id)
         env = gym.make(
-            f"{task}-v0",
+            f"{task}-v0", 
             obs_mode="rgbd",
             control_mode="pd_ee_delta_pose",
             reward_mode="dense",
