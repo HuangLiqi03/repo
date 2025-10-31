@@ -92,7 +92,7 @@ if __name__ == "__main__":
         env = make_env(config.env_id, config.seed, config.pixel_obs)
         eval_env = make_env(config.env_id, config.seed, config.pixel_obs)
 
-    # Sync video distractors
+    # Sync video distractors 视觉干扰
     if getattr(eval_env.unwrapped, "_img_source", None) is not None:
         eval_env.unwrapped._bg_source = deepcopy(env.unwrapped._bg_source)
 
