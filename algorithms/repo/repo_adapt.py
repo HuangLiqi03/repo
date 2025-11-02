@@ -26,7 +26,7 @@ from .repo import RePo
 class FinetunedRePo(RePo):
     def build_models(self, config, env):
         super().build_models(config, env)
-        self.encoder_optimizer = Adam(self.encoder.parameters(), lr=config.model_lr)
+        self.encoder_optimizer = Adam(self.encoder.parameters(), lr=config.model_lr)#只优化encoder
 
     def train_encoder(self, obs, actions, rewards, nonterms):
         embeds = bottle(self.encoder, (obs,))
@@ -93,7 +93,7 @@ class FinetunedRePo(RePo):
         self.logger.record("train/beta", self.log_beta.exp().item())
         self.logger.record("train/beta_loss", beta_loss.item())
 
-    def train_agent(self):
+    def train_agent(self):#相比完整训练 只训练encoder 没有dynamics model和actor critic
         for _ in range(self.c.train_steps):
             obs, actions, rewards, dones = self.buffer.sample(
                 self.c.batch_size, self.c.chunk_size
