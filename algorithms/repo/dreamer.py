@@ -40,9 +40,9 @@ class Dreamer:
         self.step = 0
         self.build_models(config, env)
         self.buffer = SequenceReplayBuffer(
-            config.replay_size,
-            env.observation_space.shape,
-            env.action_space.shape,
+            config.replay_size, #500000
+            env.observation_space.shape,#rgb
+            env.action_space.shape,#7？
             obs_type=np.uint8 if config.pixel_obs else np.float32,
         )
         self.free_nats = torch.full((1,), config.free_nats).to(self.device)
@@ -178,15 +178,15 @@ class Dreamer:
         posterior_state,
         action,
         obs,
-        explore=False,
+            explore=False,
     ):
         # Action and observation need extra time dimension
         belief, _, _, _, posterior_state, _, _ = self.transition_model.observe(
             belief,
             posterior_state,
             action.unsqueeze(0),
-            self.encoder(obs).unsqueeze(0),
-        )
+            self.encoder(obs).unsqueeze(0),#(1024)
+        )#获得根据当前state和action更新的belief和再加上observation更新的posterior_state
         # Remove time dimension from belief and state
         belief, posterior_state = belief.squeeze(0), posterior_state.squeeze(0)
         action = self.actor_model.get_action(belief, posterior_state, det=not explore)
@@ -305,12 +305,12 @@ class Dreamer:
         # Train actor
         with FreezeParameters(self.model_params):
             (
-                imag_beliefs,
+                imag_beliefs,#shape(horizon-1, batch, belief_size)
                 imag_prior_states,
                 imag_prior_means,
                 imag_prior_std_devs,
             ) = self.transition_model.imagine(
-                beliefs, posterior_states, self.actor_model, self.c.horizon
+                beliefs, posterior_states, self.actor_model, self.c.horizon #不是chunksize
             )
         with FreezeParameters(self.model_params + list(self.value_model.parameters())):
             reward_preds = bottle(self.reward_model, (imag_beliefs, imag_prior_states))
@@ -339,19 +339,19 @@ class Dreamer:
             reward_preds = reward_preds + self.c.disag_coef * disag
 
         # Generalized value estimation
-        discounts = self.c.gamma * torch.ones_like(reward_preds)
+        discounts = self.c.gamma * torch.ones_like(reward_preds) #shape(horizon-1, batch*(chunk_size-1))
         returns = lambda_return(
             reward_preds[:-1],
             value_preds[:-1],
             discounts[:-1],
             value_preds[-1],
             self.c.gae_lambda,
-        )
+        )#想象中的每一步的return
         actor_loss = (
             -returns.mean()
             - self.c.action_ent_coef * action_entropy
             - self.c.latent_ent_coef * latent_entropy
-        )
+        )#目的是最大化return和保持探索
 
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
@@ -384,7 +384,7 @@ class Dreamer:
         for _ in range(self.c.train_steps):
             obs, actions, rewards, dones = self.buffer.sample(
                 self.c.batch_size, self.c.chunk_size
-            )
+            )#第一维是时间维度 chunk_size
             obs = to_torch(bottle(preprocess, (obs,)))
             actions = to_torch(actions)
             rewards = to_torch(rewards)
@@ -404,9 +404,9 @@ class Dreamer:
         if self.c.load_checkpoint:
             self.load_checkpoint()
         if len(self.buffer) == 0:
-            self.collect_seed_data()
+            self.collect_seed_data()#采到prefill条数据 动作纯随机
 
-        belief, posterior_state, action_tensor = self.init_latent_and_action()
+        belief, posterior_state, action_tensor = self.init_latent_and_action()#置为0
         obs = self.env.reset()
         episode_reward = 0
         episode_success = 0
@@ -418,16 +418,16 @@ class Dreamer:
                     belief,
                     posterior_state,
                     action_tensor,
-                ) = self.update_latent_and_select_action(
+                ) = self.update_latent_and_select_action(#更新了belief和posterior_state,选择了action
                     belief, posterior_state, action_tensor, obs_tensor, True
-                )
+                )#action是通过posterior_state和belief算出来的
             action = to_np(action_tensor)[0]
             next_obs, reward, done, info = self.env.step(action)
             self.buffer.push(obs, action, reward, done)
             obs = next_obs
             episode_reward += reward
             episode_success += info.get("success", 0)
-            if done:
+            if done:#完成才记录并重置环境
                 self.logger.record("train/return", episode_reward)
                 self.logger.record("train/success", float(episode_success > 0))
                 belief, posterior_state, action_tensor = self.init_latent_and_action()
@@ -436,7 +436,7 @@ class Dreamer:
                 episode_success = 0
 
             # Train agent
-            if self.step % self.c.train_every == 0:
+            if self.step % self.c.train_every == 0:#每train_every步训练一次
                 self.train_agent()
 
             # Evaluate agent

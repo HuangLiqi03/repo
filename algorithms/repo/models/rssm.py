@@ -60,7 +60,7 @@ class TransitionModel(nn.Module):
         posterior_std_dev = F.softplus(posterior_std_dev) + self.min_std_dev
         posterior_state = posterior_mean + (
             posterior_std_dev * torch.randn_like(posterior_mean)
-        )
+        )#采样环节
         return posterior_state, posterior_mean, posterior_std_dev
 
     # Operates over (previous) belief (previous) state, (previous) actions, (previous) nonterminals (mask), and (current) observations

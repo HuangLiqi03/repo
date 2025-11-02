@@ -24,7 +24,7 @@ def get_config():
     config.eval_every = 5000
     config.checkpoint_every = 25000
     config.log_every = 500
-    config.embedding_size = 1024
+    config.embedding_size = 1024 #obs encoder
     config.hidden_size = 200
     config.belief_size = 200
     config.state_size = 30

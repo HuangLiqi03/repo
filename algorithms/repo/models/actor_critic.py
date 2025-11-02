@@ -87,7 +87,7 @@ class ActorModel(nn.Module):
         return action_mean, action_std
 
     def get_action_dist(self, belief, state):
-        action_mean, action_std = self.forward(belief, state)
+        action_mean, action_std = self.forward(belief, state)#获得均值方差
         dist = Normal(action_mean, action_std)
         dist = TransformedDistribution(dist, TanhBijector())
         dist = Independent(dist, 1)

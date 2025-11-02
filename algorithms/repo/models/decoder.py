@@ -45,7 +45,7 @@ class VisualObservationModel(nn.Module):
         hidden = self.act_fn(self.conv2(hidden))
         hidden = self.act_fn(self.conv3(hidden))
         observation = self.conv4(hidden)
-        return observation
+        return observation #模型需要输出“当前隐状态下的观测重建”，用于衡量隐变量对观测的解释能力。
 
 
 def ObservationModel(

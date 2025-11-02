@@ -25,15 +25,15 @@ class RePo(Dreamer):
     def train_dynamics(self, obs, actions, rewards, nonterms):
         init_belief = torch.zeros(self.c.batch_size, self.c.belief_size).to(self.device)
         init_state = torch.zeros(self.c.batch_size, self.c.state_size).to(self.device)
-        embeds = bottle(self.encoder, (obs,))
+        embeds = bottle(self.encoder, (obs,))#obs编码成embed
         (
-            beliefs,
-            prior_states,
-            prior_means,
-            prior_std_devs,
-            posterior_states,
-            posterior_means,
-            posterior_std_devs,
+            beliefs,#信念序列
+            prior_states,#先验状态序列，不根据obs，只根据actions和上一个state计算得到
+            prior_means,#先验状态均值
+            prior_std_devs,#先验状态标准差
+            posterior_states,#后验状态序列，有根据obs
+            posterior_means,#后验状态均值
+            posterior_std_devs,#后验状态标准差
         ) = self.transition_model.observe(
             init_belief,
             init_state,
@@ -50,14 +50,14 @@ class RePo(Dreamer):
             -obs_dist.log_prob(obs[1:])
             .sum((2, 3, 4) if self.c.pixel_obs else 2)
             .mean((0, 1))
-        )
+        )#重建损失 衡量隐变量对观测的解释能力 像素级别计算
 
         # Reward loss
         # Since we predict rewards from next states, we need to shift reward
         # by one and account for terminal states
         rewards_tgt = rewards[:-1].squeeze(-1)
         mask = nonterms[:-1].squeeze(-1)
-        reward_dist = Normal(bottle(self.reward_model, (beliefs, posterior_states)), 1)
+        reward_dist = Normal(bottle(self.reward_model, (beliefs, posterior_states)), 1)#预测奖励的模型
         reward_loss = (-reward_dist.log_prob(rewards_tgt) * mask).mean((0, 1))
 
         # KL loss
@@ -76,7 +76,7 @@ class RePo(Dreamer):
             )
             .sum(2)
             .mean((0, 1))
-        )
+        )#轮流当作优化的参数
         kl_alpha = self.c.prior_train_steps / (1 + self.c.prior_train_steps)
         kl_div = kl_alpha * kl_prior + (1 - kl_alpha) * kl_post
         kl_viol = kl_div - self.c.target_kl

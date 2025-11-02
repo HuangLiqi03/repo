@@ -29,7 +29,7 @@ def get_device():
     return _DEVICE
 
 
-def to_torch(x, dtype=None, device=None):
+def to_torch(x, dtype=None, device=None):#放到gpu上
     if device is None:
         device = get_device()
     return torch.as_tensor(x, dtype=dtype, device=device)
