@@ -170,8 +170,6 @@ zipp                     3.23.0
 
 
 # render报错
-
-
 It is usually due to the broken vulkan driver. Can you try to run vulkaninfo to show whether the vulkan driver is working?vulkaninfo can be installed through sudo apt-get install vulkan-utils
 If vulkaninfo fails to show the information about Vulkan, you need to create /usr/share/vulkan/icd.d/nvidia icd.json and set theenvironment variable VK ICD FILENAMES=/usr/share/vulkan/icd.d/nvidia icd.json .
 The content of nvidia icd.json :
@@ -189,3 +187,9 @@ The content of nvidia icd.json :
 # train
 {PushCubeMatterport, LiftCubeMatterport, TurnFaucetMatterport}
 python experiments/train_repo.py --algo repo --env_id maniskill-TurnFaucetMatterport --expr_name benchmark  --seed 0 --gpu_id 0
+
+# adapt
+python experiments/adapt_repo.py --algo repo_calibrate --env_id maniskill-LiftCubeMatterport --expr_name adaptaion --source_dir logdir/repo/maniskill-LiftCubeMatterport/benchmark/0 --seed 0 --alignment_mode distribution
+
+# mani3
+装环境要装最新的torch pip3的那个

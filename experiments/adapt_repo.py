@@ -1,4 +1,4 @@
-mmm import gym
+import gym
 import numpy as np
 from copy import deepcopy
 from gym import spaces
@@ -11,43 +11,43 @@ from algorithms.repo import (
     CalibratedRePo,
 )
 from environments import make_env
-from environments.dmc import DMCEnv
+# from environments.dmc import DMCEnv
 from environments.wrappers import NormalizeAction, TimeLimit, ActionRepeat, MazeWrapper
 
 
-class PairedDMCEnv(DMCEnv):
-    def __init__(
-        self, name, pixel_obs, img_source, resource_files, total_frames, reset_bg
-    ):
-        super().__init__(
-            name, pixel_obs, img_source, resource_files, total_frames, reset_bg
-        )
-        img_shape = (6, self._resolution, self._resolution)
-        self.observation_space = spaces.Box(
-            low=0, high=255, shape=img_shape, dtype=np.uint8
-        )
+# class PairedDMCEnv(DMCEnv):
+#     def __init__(
+#         self, name, pixel_obs, img_source, resource_files, total_frames, reset_bg
+#     ):
+#         super().__init__(
+#             name, pixel_obs, img_source, resource_files, total_frames, reset_bg
+#         )
+#         img_shape = (6, self._resolution, self._resolution)
+#         self.observation_space = spaces.Box(
+#             low=0, high=255, shape=img_shape, dtype=np.uint8
+#         )
 
-    def _get_obs(self, time_step):
-        if self._pixel_obs:
-            src_obs = self.render(
-                mode="rgb_array",
-                height=self._resolution,
-                width=self._resolution,
-                camera_id=self._camera_id,
-            )
-            tgt_obs = src_obs.copy()
-            if self._img_source is not None:
-                # Hardcoded mask for dmc
-                mask = np.logical_and(
-                    (tgt_obs[:, :, 2] > tgt_obs[:, :, 1]),
-                    (tgt_obs[:, :, 2] > tgt_obs[:, :, 0]),
-                )
-                bg = self._bg_source.get_image()
-                tgt_obs[mask] = bg[mask]
-            obs = np.concatenate((src_obs, tgt_obs), 2).transpose(2, 0, 1).copy()
-        else:
-            raise ValueError("Paired DMC only supports pixel obs")
-        return obs
+#     def _get_obs(self, time_step):
+#         if self._pixel_obs:
+#             src_obs = self.render(
+#                 mode="rgb_array",
+#                 height=self._resolution,
+#                 width=self._resolution,
+#                 camera_id=self._camera_id,
+#             )
+#             tgt_obs = src_obs.copy()
+#             if self._img_source is not None:
+#                 # Hardcoded mask for dmc
+#                 mask = np.logical_and(
+#                     (tgt_obs[:, :, 2] > tgt_obs[:, :, 1]),
+#                     (tgt_obs[:, :, 2] > tgt_obs[:, :, 0]),
+#                 )
+#                 bg = self._bg_source.get_image()
+#                 tgt_obs[mask] = bg[mask]
+#             obs = np.concatenate((src_obs, tgt_obs), 2).transpose(2, 0, 1).copy()
+#         else:
+#             raise ValueError("Paired DMC only supports pixel obs")
+#         return obs
 
 
 class PairedMazeWrapper(MazeWrapper):
